@@ -1,0 +1,50 @@
+---
+title: "Elections"
+author: "Nihal Neeraj"
+format: html
+execute: 
+  echo: false
+---
+
+```{r}
+#| label: setup
+#| message: false
+
+library(tidyverse)
+library(primer.data)
+library(brms)
+library(tidybayes)
+library(gtsummary)
+
+
+x <- governors |> 
+  select(death_age, election_age, win_margin, party, sex) |> 
+  mutate(treatment = ifelse(win_margin > 0, "win", "lose")) |> 
+  filter(abs(win_margin) < 5) 
+
+formula <- bf(death_age ~ treatment + party + win_margin)
+```
+
+```{r}
+#| cache: true
+fit_x <- brm(formula = formula,
+             data = x,
+             family = gaussian(),
+             refresh = 0,
+             silent = 2,
+             seed = 9)
+```
+
+```{r}
+fixef(fit_x)
+```
+
+$$ 
+\text{death_age} = \beta_{0} + \beta_{1}\text{treatment} + \beta_{2}\text{party} + \beta_{3}\text{win_margin} +\epsilon_{i}
+
+$$
+
+```{r}
+tbl_regression(fit_x, intercept = TRUE)
+```
+
